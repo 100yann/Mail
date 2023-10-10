@@ -1,0 +1,39 @@
+textarea {
+    min-height: 400px;
+}
+p {
+    margin: 0;
+}
+
+
+.email-line {
+    color: black;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 10px;
+    border: 1px gray solid;
+    margin-bottom: -1px;
+
+}
+
+.email-line-left{
+    flex-basis: 50%;
+    display: flex;
+    align-items: center;
+}
+.sender {
+    height: 100%;
+    width: 35%;
+    overflow: hidden;
+}
+.subject {
+    margin-left: 10px;
+}
+
+.email-line-right {
+    color: gray;
+}
+
+.read {
+    background-color: rgb(229, 229, 229);
+}
