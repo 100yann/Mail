@@ -15,7 +15,8 @@ function compose_email() {
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
-
+  document.querySelector('#view-single-email').style.display = 'none';
+  
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
@@ -55,6 +56,7 @@ function load_mailbox(mailbox) {
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#view-single-email').style.display = 'none';
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -63,27 +65,27 @@ function load_mailbox(mailbox) {
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
   .then(emails => {
-    Object.keys(emails).forEach(key => {
+    emails.forEach(email => {
       if (mailbox === 'inbox') {
-        email = emails[key]['sender'];
+        person = email.sender;
       } else if (mailbox === 'sent') {
-        email = emails[key]['recipients']
+        person = emails.recepients
       };
-      subject = emails[key]['subject']
-      timestamp = emails[key]['timestamp']
+
+      const { subject, timestamp, read, id } = email;
+
       const element = document.createElement('div');
       element.className = 'email-line'
-      console.log(emails[key])
+
       // check if email is read
-      if (emails[key]['read'] === true){
-        element.className += ' read'
+      if (read){
+        element.classList.add('read');
       }
 
-      element.href = `/emails/${emails[key]['id']}`
       element.innerHTML = `
         <div class="email-line-left">
           <div class="sender">
-            <p><strong>${email}</strong></p>
+            <p><strong>${person}</strong></p>
           </div>
           <div class="subject">
             <p>${subject}</p>
@@ -93,11 +95,19 @@ function load_mailbox(mailbox) {
           <p>${timestamp}</p>
         </div>
       `;
+
       ulElement.append(element)
+
+      // add event listener for each listed email
       element.addEventListener('click', () => {
-        const emailId = emails[key]['id'];
-        console.log(emailId)
+        displayEmail(id)
       })
-    })
-  });
-}
+
+    });
+  })
+  .catch(error => {
+    console.error('Error fetching emails: ', error)
+  })
+};
+
+
