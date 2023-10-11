@@ -10,23 +10,46 @@ document.addEventListener('DOMContentLoaded', function() {
   load_mailbox('inbox');
 });
 
-function compose_email(recepient = null, subject = null) {
+
+let emailData = {
+  sender: '',
+  recipient: '',
+  subject: '',
+  body: '',
+  timestamp: ''
+}
+
+function compose_email(is_reply=false) {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
   document.querySelector('#view-single-email').style.display = 'none';
   
-  // Clear out composition fields
-  if (recepient && subject){
-    document.querySelector('#compose-recipients').value = recepient;
-    document.querySelector('#compose-subject').value = `Re: ${subject}`;
+
+  // If compose is reply
+  if (is_reply){
+
+    // Check if Re: is already in the subject
+    if (emailData.subject.slice(0,3) != 'Re:'){
+      subject = `Re: ${emailData.subject}`
+    }
+
+    // Add data to fields
+    document.querySelector('#compose-recipients').value = emailData.recipient;
+    document.querySelector('#compose-subject').value = emailData.subject;
+    document.querySelector('#compose-body').value = `On ${emailData.timestamp}, ${emailData.recipient} wrote:\n'${emailData.body}'`;
+    document.querySelector('#compose-body').focus()
+
+  // If compose is a new email
   } else {
+
     document.querySelector('#compose-recipients').value = '';
     document.querySelector('#compose-subject').value = '';
+    document.querySelector('#compose-body').value = '';
 
   }
-  document.querySelector('#compose-body').value = '';
+  
 
   document.querySelector('#compose-form').onsubmit = () => {
     const recepient = document.querySelector('#compose-recipients').value
@@ -72,11 +95,12 @@ function load_mailbox(mailbox) {
   .then(response => response.json())
   .then(emails => {
     emails.forEach(email => {
+      console.log(email.recipients)
       if (mailbox === 'inbox') {
-        person = email.sender;
+        person = email.sender
       } else if (mailbox === 'sent') {
-        person = emails.recepients
-      };
+        person = email.recipients
+      }
 
       const { subject, timestamp, read, id } = email;
 
@@ -104,9 +128,10 @@ function load_mailbox(mailbox) {
 
       ulElement.append(element)
 
-      // add event listener for each listed email
+      // Add event listener for each listed email
       element.addEventListener('click', () => {
         display_email(id)
+
       })
 
     });
@@ -117,28 +142,36 @@ function load_mailbox(mailbox) {
 };
 
 
-// display selected email
+// Display selected email
 function display_email(emailId){
-  // get the data for the selected email
+  // Get the data for the selected email
   fetch(`emails/${emailId}`)
   .then(response => response.json())
   .then(data => {
+    emailData.sender = data.sender
+    emailData.recipient = data.recipients;
+    emailData.subject = data.subject;
+    emailData.body = data.body;
+    emailData.timestamp = data.timestamp;
+
+    // display the single email and hide the list of emails
     document.querySelector('#emails-view').style.display = 'none';
     document.querySelector('#view-single-email').style.display = 'block';
-
+    
     document.querySelector('#view-single-email').innerHTML = `
-      <p><strong>From: </strong>${data.sender}</p>
-      <p><strong>To: </strong>${data.recipients}</p>
-      <p><strong>Subject: </strong>${data.subject}</p>
-      <p><strong>Timestamp: </strong>${data.timestamp}</p>
+      <p id='from'><strong>From: </strong>${emailData.sender}</p>
+      <p><strong>To: </strong>${emailData.recipient}</p>
+      <p id='subject'><strong>Subject: </strong>${emailData.subject}</p>
+      <p id='timestamp'><strong>Timestamp: </strong>${emailData.timestamp}</p>
       <button id="reply" class="btn btn-primary">Reply</button>
       <hr>
-      <p>${data.body}</p>
+      <p id='body'>${emailData.body}</p>
     `;
     const reply = document.querySelector('#reply')
     reply.addEventListener('click', () => {
-      compose_email(recepient=data.recipients, subject=data.subject)
+      compose_email(is_reply=true)
 
     });
   })
 }
+
