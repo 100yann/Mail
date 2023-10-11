@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
   load_mailbox('inbox');
 });
 
-function compose_email() {
+function compose_email(recepient = null, subject = null) {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
@@ -18,8 +18,14 @@ function compose_email() {
   document.querySelector('#view-single-email').style.display = 'none';
   
   // Clear out composition fields
-  document.querySelector('#compose-recipients').value = '';
-  document.querySelector('#compose-subject').value = '';
+  if (recepient && subject){
+    document.querySelector('#compose-recipients').value = recepient;
+    document.querySelector('#compose-subject').value = `Re: ${subject}`;
+  } else {
+    document.querySelector('#compose-recipients').value = '';
+    document.querySelector('#compose-subject').value = '';
+
+  }
   document.querySelector('#compose-body').value = '';
 
   document.querySelector('#compose-form').onsubmit = () => {
@@ -100,7 +106,7 @@ function load_mailbox(mailbox) {
 
       // add event listener for each listed email
       element.addEventListener('click', () => {
-        displayEmail(id)
+        display_email(id)
       })
 
     });
@@ -111,3 +117,28 @@ function load_mailbox(mailbox) {
 };
 
 
+// display selected email
+function display_email(emailId){
+  // get the data for the selected email
+  fetch(`emails/${emailId}`)
+  .then(response => response.json())
+  .then(data => {
+    document.querySelector('#emails-view').style.display = 'none';
+    document.querySelector('#view-single-email').style.display = 'block';
+
+    document.querySelector('#view-single-email').innerHTML = `
+      <p><strong>From: </strong>${data.sender}</p>
+      <p><strong>To: </strong>${data.recipients}</p>
+      <p><strong>Subject: </strong>${data.subject}</p>
+      <p><strong>Timestamp: </strong>${data.timestamp}</p>
+      <button id="reply" class="btn btn-primary">Reply</button>
+      <hr>
+      <p>${data.body}</p>
+    `;
+    const reply = document.querySelector('#reply')
+    reply.addEventListener('click', () => {
+      compose_email(recepient=data.recipients, subject=data.subject)
+
+    });
+  })
+}
