@@ -28,17 +28,19 @@ function compose_email(is_reply=false) {
   
 
   // If compose is reply
-  if (is_reply){
+  if (is_reply === true){
 
     // Check if Re: is already in the subject
     if (emailData.subject.slice(0,3) != 'Re:'){
       subject = `Re: ${emailData.subject}`
+    } else {
+      subject = emailData.subject
     }
 
     // Add data to fields
-    document.querySelector('#compose-recipients').value = emailData.recipient;
-    document.querySelector('#compose-subject').value = emailData.subject;
-    document.querySelector('#compose-body').value = `On ${emailData.timestamp}, ${emailData.recipient} wrote:\n'${emailData.body}'`;
+    document.querySelector('#compose-recipients').value = emailData.sender;
+    document.querySelector('#compose-subject').value = subject;
+    document.querySelector('#compose-body').value = `On ${emailData.timestamp}, ${emailData.sender} wrote:\n'${emailData.body}'`;
     document.querySelector('#compose-body').focus()
 
   // If compose is a new email
@@ -95,7 +97,7 @@ function load_mailbox(mailbox) {
   .then(response => response.json())
   .then(emails => {
     emails.forEach(email => {
-      console.log(email.recipients)
+
       if (mailbox === 'inbox') {
         person = email.sender
       } else if (mailbox === 'sent') {
@@ -130,10 +132,9 @@ function load_mailbox(mailbox) {
 
       // Add event listener for each listed email
       element.addEventListener('click', () => {
+        readEmail(id, emailProperty='read')
         display_email(id)
-
       })
-
     });
   })
   .catch(error => {
@@ -157,21 +158,59 @@ function display_email(emailId){
     // display the single email and hide the list of emails
     document.querySelector('#emails-view').style.display = 'none';
     document.querySelector('#view-single-email').style.display = 'block';
-    
+
+    if (data.archived === true){
+      var archiveButton = 'Unarchive'
+    } else {
+      var archiveButton = 'Archive'
+    }
+
     document.querySelector('#view-single-email').innerHTML = `
       <p id='from'><strong>From: </strong>${emailData.sender}</p>
       <p><strong>To: </strong>${emailData.recipient}</p>
       <p id='subject'><strong>Subject: </strong>${emailData.subject}</p>
       <p id='timestamp'><strong>Timestamp: </strong>${emailData.timestamp}</p>
       <button id="reply" class="btn btn-primary">Reply</button>
+      <button id="archive" class="btn btn-primary">${archiveButton}</button>
       <hr>
       <p id='body'>${emailData.body}</p>
     `;
+
     const reply = document.querySelector('#reply')
     reply.addEventListener('click', () => {
       compose_email(is_reply=true)
-
     });
+    const archive = document.querySelector('#archive')
+    archive.addEventListener('click', () =>{
+      if (data.archived === true){
+        readEmail(emailId, 'archive', false)
+      } else {
+        readEmail(emailId, 'archive', true)
+      }
+    })
   })
 }
 
+function readEmail(emailId, emailProperty, status=false){
+  // read email
+  if (emailProperty === 'read'){
+    fetch(`emails/${emailId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        'read': true
+      })
+    })
+  // archive email  
+  } else if (emailProperty === 'archive'){
+    fetch(`emails/${emailId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        'archived': status
+      })
+    }).then(response => {
+      if(response.ok) {
+        load_mailbox('inbox')
+      }
+    })
+  }
+}
