@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-
 let emailData = {
   sender: '',
   recipient: '',
@@ -116,7 +115,6 @@ function load_mailbox(mailbox) {
         element.classList.add('read');
       } else {
         unread += 1
-        console.log(unread)
       }
 
       element.innerHTML = `
@@ -134,12 +132,12 @@ function load_mailbox(mailbox) {
       `;
 
       ulElement.append(element)
-
+      
       // Add event listener for each listed email
       element.addEventListener('click', () => {
         unread -= 1
         readEmail(id, emailProperty='read')
-        display_email(id)
+        display_email(id, mailbox)
         updateUnreadCount(unread)
       })
     });
@@ -164,7 +162,7 @@ function updateUnreadCount(unread){
 }
 
 // Display selected email
-function display_email(emailId){
+function display_email(emailId, mailbox){
   // Get the data for the selected email
   fetch(`emails/${emailId}`)
   .then(response => response.json())
@@ -179,36 +177,42 @@ function display_email(emailId){
     document.querySelector('#emails-view').style.display = 'none';
     document.querySelector('#view-single-email').style.display = 'block';
 
+
+
     if (data.archived === true){
       var archiveButton = 'Unarchive'
     } else {
       var archiveButton = 'Archive'
     }
-
+    const condition = (mailbox != 'sent');
     document.querySelector('#view-single-email').innerHTML = `
       <p id='from'><strong>From: </strong>${emailData.sender}</p>
       <p><strong>To: </strong>${emailData.recipient}</p>
       <p id='subject'><strong>Subject: </strong>${emailData.subject}</p>
       <p id='timestamp'><strong>Timestamp: </strong>${emailData.timestamp}</p>
       <button id="reply" class="btn btn-primary">Reply</button>
-      <button id="archive" class="btn btn-primary">${archiveButton}</button>
+      ${condition ? `<button id="archive" class="btn btn-primary">${archiveButton}</button>` : ''}
       <hr>
       <p id='body'>${emailData.body}</p>
-    `;
+      `;
+
 
     const reply = document.querySelector('#reply')
     reply.addEventListener('click', () => {
       compose_email(is_reply=true)
     });
-    const archive = document.querySelector('#archive')
-    archive.addEventListener('click', () =>{
-      if (data.archived === true){
-        readEmail(emailId, 'archive', false)
-      } else {
-        readEmail(emailId, 'archive', true)
-      }
-    })
-  })
+
+    if (mailbox != 'sent'){
+      const archive = document.querySelector('#archive')
+      archive.addEventListener('click', () =>{
+        if (data.archived === true){
+          readEmail(emailId, 'archive', false)
+        } else {
+          readEmail(emailId, 'archive', true)
+        }
+      })
+    }
+  }) 
 }
 
 function readEmail(emailId, emailProperty, status=false){
