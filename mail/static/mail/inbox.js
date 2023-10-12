@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
+
 let emailData = {
   sender: '',
   recipient: '',
@@ -92,13 +93,14 @@ function load_mailbox(mailbox) {
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 
+  let unread = 0
   let ulElement = document.querySelector('#emails-view')
   fetch(`/emails/${mailbox}`)
   .then(response => response.json())
   .then(emails => {
     emails.forEach(email => {
 
-      if (mailbox === 'inbox') {
+      if (mailbox === 'inbox' || mailbox ==='archive') {
         person = email.sender
       } else if (mailbox === 'sent') {
         person = email.recipients
@@ -112,6 +114,9 @@ function load_mailbox(mailbox) {
       // check if email is read
       if (read){
         element.classList.add('read');
+      } else {
+        unread += 1
+        console.log(unread)
       }
 
       element.innerHTML = `
@@ -132,16 +137,31 @@ function load_mailbox(mailbox) {
 
       // Add event listener for each listed email
       element.addEventListener('click', () => {
+        unread -= 1
         readEmail(id, emailProperty='read')
         display_email(id)
+        updateUnreadCount(unread)
       })
     });
+  }).then(() => {
+    updateUnreadCount(unread)
   })
   .catch(error => {
     console.error('Error fetching emails: ', error)
   })
 };
 
+
+// Display Unread Count in Inbox button
+function updateUnreadCount(unread){
+  const inbox = document.querySelector('#inbox')
+
+  if (unread > 0){
+    inbox.textContent = `Inbox (${unread})`
+  } else {
+    inbox.textContent = `Inbox`
+  }
+}
 
 // Display selected email
 function display_email(emailId){
@@ -154,7 +174,7 @@ function display_email(emailId){
     emailData.subject = data.subject;
     emailData.body = data.body;
     emailData.timestamp = data.timestamp;
-
+    
     // display the single email and hide the list of emails
     document.querySelector('#emails-view').style.display = 'none';
     document.querySelector('#view-single-email').style.display = 'block';
