@@ -10,6 +10,19 @@ document.addEventListener('DOMContentLoaded', function() {
   load_mailbox('inbox');
 });
 
+window.addEventListener('popstate', event => {
+  if (event.state === 'null' || event.state.mailbox === 'inbox'){
+    load_mailbox('inbox')
+  } else if (event.state.mailbox === 'sent'){
+    load_mailbox('sent')
+  } else if (event.state.mailbox === 'archive'){
+    load_mailbox('archive')
+  } else if (event.state.mailbox === 'email'){
+    display_email(event.state.emailId)
+  } else if (event.state.mailbox === 'compose'){
+    compose_email()
+  }
+})
 
 let emailData = {
   sender: '',
@@ -20,7 +33,8 @@ let emailData = {
 }
 
 function compose_email(is_reply=false) {
-
+  var historyData = {mailbox: 'compose'}
+  history.pushState(historyData, '', 'compose')
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
@@ -83,7 +97,8 @@ function compose_email(is_reply=false) {
 }
 
 function load_mailbox(mailbox) {
-  
+  var historyData = {mailbox: mailbox}
+  history.pushState(historyData, '', `${mailbox}`)
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
@@ -136,6 +151,8 @@ function load_mailbox(mailbox) {
       // Add event listener for each listed email
       element.addEventListener('click', () => {
         unread -= 1
+        var historyData = {mailbox: 'email', emailId: id}
+        history.pushState(historyData, '', `email=${id}`)
         readEmail(id, emailProperty='read')
         display_email(id, mailbox)
         updateUnreadCount(unread)
@@ -174,6 +191,7 @@ function display_email(emailId, mailbox){
     emailData.timestamp = data.timestamp;
     
     // display the single email and hide the list of emails
+    document.querySelector('#compose-view').style.display = 'none';
     document.querySelector('#emails-view').style.display = 'none';
     document.querySelector('#view-single-email').style.display = 'block';
 
