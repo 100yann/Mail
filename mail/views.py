@@ -109,6 +109,11 @@ def email(request, email_id):
     # Return email contents
     if request.method == "GET":
         return JsonResponse(email.serialize())
+    
+    elif request.method == "DELETE":
+        print(email)
+        email.delete()
+        print('success')
 
     # Update whether email is read or should be archived
     elif request.method == "PUT":

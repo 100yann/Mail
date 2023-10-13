@@ -251,6 +251,7 @@ function display_email(emailId, mailbox){
       <p id='timestamp'><strong>Timestamp: </strong>${emailData.timestamp}</p>
       <button id="reply" class="btn btn-primary">Reply</button>
       ${condition ? `<button id="archive" class="btn btn-primary">${archiveButton}</button>` : ''}
+      <button id="delete" class="btn btn-primary">Delete</button>
       <hr>
       <p id='body'>${emailData.body}</p>
       `;
@@ -260,6 +261,13 @@ function display_email(emailId, mailbox){
     reply.addEventListener('click', () => {
       // Call compose email
       compose_email(is_reply=true)
+    });
+
+    const del_email = document.querySelector('#delete')
+    del_email.addEventListener('click', () => {
+      fetch(`emails/${emailId}`, {
+        method: 'DELETE'
+      }).then(load_mailbox(mailbox))
     });
 
     // Add event listener to archive button
