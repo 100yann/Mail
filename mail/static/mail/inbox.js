@@ -34,7 +34,9 @@ let emailData = {
 
 function compose_email(is_reply=false) {
   var historyData = {mailbox: 'compose'}
-  history.pushState(historyData, '', 'compose')
+  if (!window.history.state || window.history.state.mailbox !== 'compose') {
+    history.pushState(historyData, '', 'compose');
+  }
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
@@ -98,7 +100,9 @@ function compose_email(is_reply=false) {
 
 function load_mailbox(mailbox) {
   var historyData = {mailbox: mailbox}
-  history.pushState(historyData, '', `${mailbox}`)
+  if (!window.history.state || window.history.state.mailbox !== `${mailbox}`) {
+    history.pushState(historyData, '', `${mailbox}`);
+  }
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
