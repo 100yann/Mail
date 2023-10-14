@@ -6,6 +6,19 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
 
+  
+  // Highlhight current page
+  const pageButtons = document.querySelectorAll('.btn-sm')
+  var currentClicked = null
+  pageButtons.forEach((element) => {
+    element.addEventListener('click', () =>{
+      if (currentClicked){
+        currentClicked.style.opacity = 1
+      }
+      element.style.opacity = 0.5
+      currentClicked = element
+  })
+});
   // By default, load the inbox
   load_mailbox('inbox');
 });
@@ -186,7 +199,7 @@ function load_mailbox(mailbox) {
         unread -= 1
 
         var historyData = {mailbox: 'email', emailId: id}
-        history.pushState(historyData, '', `email=${id}`)
+        history.pushState(historyData, '', `view=${id}`)
         // Update email to read
         readEmail(id, emailProperty='read')
 
