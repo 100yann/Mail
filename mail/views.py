@@ -111,10 +111,8 @@ def email(request, email_id):
         return JsonResponse(email.serialize())
     
     elif request.method == "DELETE":
-        print(email)
         email.delete()
-        print('success')
-
+        return HttpResponse(status=200)
     # Update whether email is read or should be archived
     elif request.method == "PUT":
         data = json.loads(request.body)
