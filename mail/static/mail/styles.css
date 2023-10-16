@@ -5,24 +5,6 @@ p {
     margin: 0;
 }
 
-@keyframes hide{
-    0% {
-        border: 1px solid #ced4da;
-    }   
-    50% {
-        border: 1px groove #22ff00;
-    }
-    100% {
-        border: 1px solid #ced4da;
-    }
-}
-
-.form-control{
-    animation-name: hide;
-    animation-duration: 3s;
-    animation-fill-mode: forwards;
-    animation-play-state: paused;
-}
 
 .email-line {
     color: black;
@@ -56,6 +38,25 @@ p {
     background-color: rgb(229, 229, 229);
 }
 
+#body {
+    white-space: pre-wrap;    
+}
+.compose-body {
+    white-space: pre-wrap;
+}
+
+@keyframes disappear{
+    0% {
+        opacity: 1;
+    }   
+
+    100% {
+        opacity: 0;
+        display: none;
+    }
+}
+
+
 
 .custom-alert {
     display: none;
@@ -68,4 +69,8 @@ p {
     padding: 10px;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
     z-index: 999;
+    animation-name: disappear;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+    animation-play-state: paused;
 }

@@ -3,13 +3,15 @@ document.addEventListener('DOMContentLoaded', function() {
   // Use buttons to toggle between views
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
-  document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
+  document.querySelector('#archived').addEventListener('click', () => load_mailbox('archived'));
   document.querySelector('#compose').addEventListener('click', compose_email);
 
-  
+  // By default, highlight the inbox since this is the first page users see
+  currentClicked = document.querySelector('#inbox')
+  currentClicked.style.opacity = 0.5
+
   // Highlhight current page
   const pageButtons = document.querySelectorAll('.btn-sm')
-  var currentClicked = null
   pageButtons.forEach((element) => {
     element.addEventListener('click', () =>{
       if (currentClicked){
@@ -109,15 +111,19 @@ function compose_email(is_reply=false) {
     })
     .then(response => {
       if (response.status === 201){
-        document.querySelectorAll('.form-control').forEach((element) => {
-          element.style.animationPlayState = 'running';
-        })
+        load_mailbox('inbox')
+
+        // Display a custom alert that the email was successfully sent
         var alertBox = document.getElementById("custom-alert");
         alertBox.style.display = "block";
-    
+        
+        // Make it disappear after 3 seconds
         setTimeout(function() {
-            alertBox.style.display = "none";
+
+          // Trigger fade out animation
+          alertBox.style.animationPlayState = 'running';
         }, 3000);
+
         return response.json()
       }
     })
@@ -132,6 +138,17 @@ function compose_email(is_reply=false) {
 
 function load_mailbox(mailbox) {
 
+  if (currentClicked != document.querySelector(`#${mailbox}`)){
+    // If Compose redirects user to 'Inbox' set the opacity of the
+    // compose button to 1
+    currentClicked.style.opacity = 1
+
+    // Then change the opacity of 'Inbox' button to 0.5
+    currentClicked = document.querySelector(`#${mailbox}`)
+    currentClicked.style.opacity = 0.5
+  }
+
+
   var historyData = {mailbox: mailbox}
   // If function call comes from going back to 'Mailbox' don't pushState again
   if (!window.history.state || window.history.state.mailbox !== `${mailbox}`) {
@@ -142,13 +159,13 @@ function load_mailbox(mailbox) {
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('#view-single-email').style.display = 'none';
-
+  
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 
+  const ulElement = document.querySelector('#emails-view');
   // Keep track of num of unread emails
   let unread = 0
-  let ulElement = document.querySelector('#emails-view')
 
   // Send GET request to get all emails for the specified mailbox
   fetch(`/emails/${mailbox}`)
@@ -276,11 +293,19 @@ function display_email(emailId, mailbox){
       compose_email(is_reply=true)
     });
 
-    const del_email = document.querySelector('#delete')
-    del_email.addEventListener('click', () => {
+    // Add event listener to delete button
+    const delEmail = document.querySelector('#delete')
+    delEmail.addEventListener('click', () => {
       fetch(`emails/${emailId}`, {
         method: 'DELETE'
-      }).then(load_mailbox(mailbox))
+      // After deleting load the inbox
+      }).then(() => {
+        // Add a delay before reloading the mailbox
+        // otherwise the deleted email still shows up
+        setTimeout(() => {
+          load_mailbox(mailbox);
+        }, 250);
+      });
     });
 
     // Add event listener to archive button
